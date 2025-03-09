@@ -1,0 +1,2 @@
+"0","dados_tipo$qtd_sabao = unlist(lapply(dados_tipo$`sabao em po`,length))"
+"0","dados_tipo %>% group_by(qtd_sabao) %>% summarise(ocorrencias = n(), percentagem = round(n()/nrow(dados_tipo)*100,2))"

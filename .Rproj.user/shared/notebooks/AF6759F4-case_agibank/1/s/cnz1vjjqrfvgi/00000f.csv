@@ -1,0 +1,9 @@
+"0","dados_tipo$qtd_refri = unlist(lapply(dados_tipo$refrigerante,length))"
+"2","Warning message:
+"
+"2","In if (match < 0) { :"
+"2","
+ "
+"2"," a condição tem comprimento > 1 e somente o primeiro elemento será usado
+"
+"0","dados_tipo %>% group_by(qtd_refri) %>% summarise(ocorrencias = n())"

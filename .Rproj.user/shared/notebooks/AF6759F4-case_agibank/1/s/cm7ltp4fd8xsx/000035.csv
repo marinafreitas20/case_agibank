@@ -1,0 +1,10 @@
+"0","regras.all = apriori(dados_apriori,"
+"0","                      parameter =list(conf = 0.4, "
+"0","                                      target=""rules"","
+"0","                                      minlen=2)"
+"0","                      )"
+"1","Apriori
+"
+"1","
+Parameter specification:
+"

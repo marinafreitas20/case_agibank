@@ -1,0 +1,8 @@
+"0","dados_apriori_aux <- itemtransacao %>% "
+"0","left_join(itens, by = c(""item""=""codItem"")) "
+"0","dados_apriori_aux$IDTransação =  factor(dados_apriori_aux$IDTransação)"
+"0","dados_apriori_split = split(dados_apriori_aux$descrição,                   "
+"0","                  dados_apriori_aux$IDTransação)"
+"0",""
+"0","dados_apriori = as(dados_apriori_split,""transactions"")"
+"0","inspect(dados_apriori)"

@@ -1,0 +1,5 @@
+"0","regras_redundantes = is.redundant(regras.all)"
+"0",""
+"0","regras = regras.all[!regras_redundantes]"
+"0",""
+"0","inspect(sort(regras, by=""lift""))"

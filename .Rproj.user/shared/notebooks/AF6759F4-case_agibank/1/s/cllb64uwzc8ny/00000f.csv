@@ -1,0 +1,9 @@
+"0","dados_marca =  itemtransacao %>%"
+"0","  left_join(itens, by = c(""item""=""codItem"")) %>%"
+"0","  select(""IDTransação"",""tipo"",""marca"")%>%"
+"0","  pivot_wider(names_from = ""tipo"", values_from = ""marca"")"
+"2","Warning: Values in `marca` are not uniquely identified; output will contain list-cols.
+* Use `values_fn = list(marca = list)` to suppress this warning.
+* Use `values_fn = list(marca = length)` to identify where the duplicates arise
+* Use `values_fn = list(marca = summary_fun)` to summarise duplicates"
+"0","  "

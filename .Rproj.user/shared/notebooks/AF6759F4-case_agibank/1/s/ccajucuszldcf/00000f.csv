@@ -1,0 +1,2 @@
+"0","dados_marca_desc$qtd_banana = unlist(lapply(dados_marca_desc$banana,length))"
+"0","dados_marca_desc %>% group_by(qtd_banana) %>% summarise(ocorrencias = n())"

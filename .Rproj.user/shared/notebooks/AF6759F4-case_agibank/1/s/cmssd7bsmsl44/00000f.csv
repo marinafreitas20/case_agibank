@@ -1,0 +1,9 @@
+"0","dados_tipo =  itemtransacao %>%"
+"0","  left_join(itens, by = c(""item""=""codItem"")) %>%"
+"0","  select(""IDTransação"",""tipo"",""descrição"")%>%"
+"0","  pivot_wider(names_from = ""tipo"", values_from = ""descrição"")"
+"2","Warning: Values in `descrição` are not uniquely identified; output will contain list-cols.
+* Use `values_fn = list(descrição = list)` to suppress this warning.
+* Use `values_fn = list(descrição = length)` to identify where the duplicates arise
+* Use `values_fn = list(descrição = summary_fun)` to summarise duplicates"
+"0","  "

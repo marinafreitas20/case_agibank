@@ -1,0 +1,1 @@
+"0","dados_itemtransacao = dados %>% left_join(transacoes, by = ""IDTransação"" )"

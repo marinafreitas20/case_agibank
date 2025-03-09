@@ -1,0 +1,4 @@
+"0","qtd_trans_cluster = aggregate(. ~ cluster_kmeans, data = dados, n_distinct) %>% subset(select = c(cluster_kmeans,IDTransação))"
+"0",""
+"0","result_cluster = aggregate(. ~ cluster_kmeans, data = dados, sum) %>% subset(select = c(-IDTransação)) %>% right_join(qtd_trans_cluster, by=c(""cluster_kmeans""))"
+"0","result_cluster"

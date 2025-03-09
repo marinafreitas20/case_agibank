@@ -1,0 +1,10 @@
+"0","support.all = apriori(dados_apriori,"
+"0","                      parameter =list(supp =0.2, "
+"0","                                      target=""frequent itemsets"""
+"0","                                      )"
+"0","                      )"
+"1","Apriori
+"
+"1","
+Parameter specification:
+"

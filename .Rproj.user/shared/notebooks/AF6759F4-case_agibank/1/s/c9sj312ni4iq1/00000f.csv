@@ -1,0 +1,2 @@
+"0","itens$tipo <- gsub(""refirgerante"", ""refrigerante"", itens$tipo)"
+"0","itens$marca <- gsub(""limão"", ""limao"", itens$marca)"

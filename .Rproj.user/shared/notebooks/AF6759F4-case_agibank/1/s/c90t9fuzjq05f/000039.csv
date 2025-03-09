@@ -1,0 +1,6 @@
+"0","dados_tipo$frutas_compradas = unlist(lapply(dados_tipo$fruta,function(x) paste(unlist(x), collapse = ""_"")))"
+"0","hist_frutas = dados_tipo %>% group_by(frutas_compradas) %>% summarise(ocorrencias = n())"
+"0",""
+"0","ggplot(hist_frutas, aes(x=reorder(frutas_compradas, ocorrencias),"
+"0","                                 y = ocorrencias)) + "
+"0","       geom_col() + coord_flip() + labs( x=""Frutas"", y=""Ocorrências"",title='Frutas compradas conjuntamente')"

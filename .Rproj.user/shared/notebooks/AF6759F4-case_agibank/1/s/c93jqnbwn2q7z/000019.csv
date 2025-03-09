@@ -1,0 +1,7 @@
+"0","dados = itemtransacao %>% "
+"0","group_by(IDTransação,item) %>% "
+"0","summarise(qtd_itens = n()) %>% "
+"0","left_join(itens, by = c(""item""=""codItem"")) %>%  "
+"0","select(""IDTransação"",""descrição"",""qtd_itens"")%>%"
+"0","pivot_wider(names_from = ""descrição"", values_from = ""qtd_itens"")"
+"0","dados[is.na(dados)] <- 0"

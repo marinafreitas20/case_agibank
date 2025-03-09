@@ -1,0 +1,272 @@
+---
+title: "case_agibank"
+author: "Marina de Freitas Lima"
+output:
+  pdf_document: default
+  html_document: default
+---
+### Carregamento das bibliotecas
+```{r load_library, echo=TRUE, eval=TRUE}
+library(tidyverse)
+library(ggplot2)
+library(cluster)
+library(factoextra)
+library(dbscan)
+#install.packages("arules")
+library(arules)
+
+```
+
+## Carregamento dos dados
+```{r load_data, echo=TRUE, eval=TRUE}
+itemtransacao = read_csv("../../../itemtransacao.csv")
+itens = read_csv("../../../itens.csv")
+transacoes = read_csv("../../../transacoes.csv")
+print(names(itemtransacao))
+print(names(itens))
+print(names(transacoes))
+```
+### Breve espiada nos dados
+```{r exploratoria_orders}
+for(col in names(itemtransacao) ){
+  print(col)
+  print(nrow(unique(itemtransacao[col])))
+  print(unique(itemtransacao[col]))
+}
+```
+```{r exploratoria_itens}
+for(col in names(itens) ){
+  print(col)
+  print(nrow(unique(itens[col])))
+  print(unique(itens[col]))
+}
+
+
+```
+```{r exploratoria_itens}
+for(col in names(transacoes) ){
+  print(col)
+  print(nrow(unique(transacoes[col])))
+  print(unique(transacoes[col]))
+}
+
+
+```
+```{r correcoes_palavras}
+itens$tipo <- gsub("refirgerante", "refrigerante", itens$tipo)
+itens$marca <- gsub("limão", "limao", itens$marca)
+```
+
+### Transformação dados
+
+
+
+```{r transform_dados_itemid}
+dados = itemtransacao %>% 
+group_by(IDTransação,item) %>% 
+summarise(qtd_itens = n()) %>% 
+left_join(itens, by = c("item"="codItem")) %>%  
+select("IDTransação","descrição","qtd_itens")%>%
+pivot_wider(names_from = "descrição", values_from = "qtd_itens")
+dados[is.na(dados)] <- 0
+```
+
+```{r}
+dados_itemtransacao = dados %>% left_join(transacoes, by = "IDTransação" )
+```
+
+
+```{r transform_dados_tipo_marca}
+dados_marca =  itemtransacao %>%
+  left_join(itens, by = c("item"="codItem")) %>%
+  select("IDTransação","tipo","marca")%>%
+  pivot_wider(names_from = "tipo", values_from = "marca")
+  
+```
+
+```{r transform_dados_tipo}
+dados_tipo =  itemtransacao %>%
+  left_join(itens, by = c("item"="codItem")) %>%
+  select("IDTransação","tipo","descrição")%>%
+  pivot_wider(names_from = "tipo", values_from = "descrição")
+  
+```
+
+```{r transform_dados_marca_descricao}
+dados_marca_desc =  itemtransacao %>%
+  left_join(itens, by = c("item"="codItem")) %>%
+  select("IDTransação","marca","descrição")%>%
+  pivot_wider(names_from = "marca", values_from = "descrição")
+  
+```
+
+## Análise exploratória
+
+### Hipóteses
+- Quem compra um sabão não compra outro na mesma compra?
+```{r }
+dados_tipo$qtd_sabao = unlist(lapply(dados_tipo$`sabao em po`,length))
+dados_tipo %>% group_by(qtd_sabao) %>% summarise(ocorrencias = n(), percentagem = round(n()/nrow(dados_tipo)*100,2))
+
+```
+Apesar de não acorrer muito, apenas 7% das compras, mas clientes podem comprar mais de um sabão na mesma compra.<br>
+- Quem compra um tipo de limão ou banana não compra outro? Exemplo: se comprou o Taiti não compra o Siciliano.
+```{r }
+dados_marca_desc$qtd_limao = unlist(lapply(dados_marca_desc$limao,length))
+dados_marca_desc %>% group_by(qtd_limao) %>% summarise(ocorrencias = n())
+
+```
+Todos clientes que compraram limão, compraram apenas de um tipo.
+```{r}
+dados_marca_desc$qtd_banana = unlist(lapply(dados_marca_desc$banana,length))
+dados_marca_desc %>% group_by(qtd_banana) %>% summarise(ocorrencias = n())
+```
+Todos clientes que compraram banana, compraram apenas de um tipo.
+
+- Quem compra fruta, compra apenas um tipo ou mais?
+
+```{r}
+dados_tipo$frutas_compradas = unlist(lapply(dados_tipo$fruta,function(x) paste(unlist(x), collapse = "_")))
+hist_frutas = dados_tipo %>% group_by(frutas_compradas) %>% summarise(ocorrencias = n())
+
+ggplot(hist_frutas, aes(x=reorder(frutas_compradas, ocorrencias),
+                                 y = ocorrencias)) + 
+       geom_col() + coord_flip() + labs( x="Frutas", y="Ocorrências",title='Frutas compradas conjuntamente')
+```
+É mais comum comprarem limão e banana, do que só limão ou só banana, independente do tipo da fruta.
+
+- Quem compra um tipo de refrigerante não compra outro? Exemplo: se comprou a coca light não comprará a coca normal.
+
+```{r}
+dados_tipo$qtd_refri = unlist(lapply(dados_tipo$refrigerante,length))
+dados_tipo %>% group_by(qtd_refri) %>% summarise(ocorrencias = n())
+```
+É mais comum comprarem apenas um refrigerante por compra.
+
+- Quais são os produtos mais comprados jutos.
+
+## Clusterização
+
+```{r scale_dados}
+# Padronizar os dados
+dados_scaled <- dados %>%  select(-"IDTransação") %>% scale()
+
+```
+```{r}
+# Calcular a soma dos quadrados dentro dos clusters (WSS - Within-Cluster Sum of Squares) para diferentes valores de k
+wss <- c()
+for(k in 1:26) {
+    km <- kmeans(dados_scaled, centers = k, nstart = 25)
+    wss <- c(wss, km$tot.withinss)
+}
+
+# Criar o gráfico de cotovelo
+plot(1:26, wss, type = "b", 
+     xlab = "Número de Clusters (k)", 
+     ylab = "Soma dos Quadrados Dentro dos Clusters",
+     main = "Método do Cotovelo para Determinar k Ideal")
+
+grid()
+```
+```{r}
+# Para encontrar o número ideal de clusters usando silhueta
+silhouette_scores <- c()
+for(k in 2:26) {
+    km <- kmeans(dados_scaled, centers = k, nstart = 25)
+    sil_score <- mean(silhouette(km$cluster, dist(dados_scaled))[,3])
+    silhouette_scores <- c(silhouette_scores, sil_score)
+}
+
+# Plotar scores de silhueta para diferentes valores de k
+plot(2:26, silhouette_scores, type = "b", 
+     xlab = "Número de Clusters (k)", 
+     ylab = "Score Médio de Silhueta",
+     main = "Scores de Silhueta por Número de Clusters")
+
+```
+
+```{r kmeans}
+# Método K-means
+
+k=10
+
+kmeans_result <- kmeans(dados_scaled, centers = k, nstart = 25)
+
+dados$cluster_kmeans <- unlist(kmeans_result['cluster'])
+
+# Calcular e plotar a silhueta para K-means
+
+# Calcular a silhueta
+sil <- silhouette(kmeans_result$cluster, dist(dados_scaled))
+
+print(mean(sil[,3]))
+
+```
+
+```{r}
+qtd_trans_cluster = aggregate(. ~ cluster_kmeans, data = dados, n_distinct) %>% subset(select = c(cluster_kmeans,IDTransação))
+
+result_cluster = aggregate(. ~ cluster_kmeans, data = dados, sum) %>% subset(select = c(-IDTransação)) %>% left_join(qtd_trans_cluster, by=c("cluster_kmeans"))
+result_cluster
+```
+
+**Observações:**
+
+Todos que compraram algum omo (progress ou colors) também compraram alguma coca (normal, light ou lemon light).
+Quem compra Ariel, geralmente compra algum tipo de banana.
+
+# Algoritmo Apriori
+
+## Transformação dados para Apriori
+
+```{r transform_transactions}
+dados_apriori_aux <- itemtransacao %>% 
+left_join(itens, by = c("item"="codItem")) 
+dados_apriori_aux$IDTransação =  factor(dados_apriori_aux$IDTransação)
+dados_apriori_split = split(dados_apriori_aux$descrição,                   
+                  dados_apriori_aux$IDTransação)
+
+dados_apriori = as(dados_apriori_split,"transactions")
+inspect(dados_apriori)
+```
+```{r}
+summary(dados_apriori)
+```
+```{r}
+image(dados_apriori)
+```
+```{r}
+unique(itens$descrição)
+```
+```{r}
+support.all = apriori(dados_apriori,
+                      parameter =list(supp =0.2, 
+                                      target="frequent itemsets"
+                                      )
+                      )
+inspect(sort(support.all, by="count"))
+```
+Os itens mais frequentemente comprados são banana prata, coca light e banana caturra. 
+
+```{r}
+regras.all = apriori(dados_apriori,
+                      parameter =list(conf = 0.4, 
+                                      target="rules",
+                                      minlen=2)
+                      )
+inspect(sort(regras.all, by=c("support","confidence")))
+
+```
+```{r}
+regras_redundantes = is.redundant(regras.all)
+
+regras = regras.all[!regras_redundantes]
+
+inspect(sort(regras, by="lift"))
+
+```
+**Observações:**
+
+Com uma confiança de 100% quem compra banana caturra e coca light, também compra limão siciliano.
+Quem compra coca light mas não compra nenhum tipo de banana também compra sabão omo progress.
+E geralmente quem compra coca light e sabão omo, também compra limão Taiti.

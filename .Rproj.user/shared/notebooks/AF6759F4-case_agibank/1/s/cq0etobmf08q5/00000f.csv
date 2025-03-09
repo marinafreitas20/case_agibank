@@ -1,0 +1,3 @@
+"0","# Padronizar os dados"
+"0","dados_scaled <- dados %>%  select(-""IDTransação"") %>% scale()"
+"2","Adding missing grouping variables: `IDTransação`"
